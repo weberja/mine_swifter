@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use super::buttons::GameMenuButton;
 use super::ui::NORMAL_BUTTON;
 
 #[derive(Component)]
@@ -7,7 +8,7 @@ pub struct LostScreenComp;
 
 pub fn destroy_lost_screen(mut commands: Commands, q_comp: Query<Entity, With<LostScreenComp>>) {
     for e in &q_comp {
-        commands.entity(e).despawn();
+        commands.entity(e).despawn_recursive();
     }
 }
 
@@ -63,6 +64,7 @@ pub fn setup_lost_screen(mut commands: Commands, ass: Res<AssetServer>) {
                             parent
                                 .spawn((
                                     Button,
+                                    GameMenuButton::RestartGame,
                                     Node {
                                         width: Val::Px(200.0),
                                         height: Val::Px(65.0),

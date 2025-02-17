@@ -1,7 +1,7 @@
 mod buttons;
-mod lost;
+pub mod lost;
 mod ui;
-mod won;
+pub mod won;
 
 use std::{ops::Sub, time::Duration};
 
@@ -21,6 +21,7 @@ pub fn ui_plugin(app: &mut App) {
     app.add_plugins(ui::ui_plugin)
         .add_systems(OnEnter(AppState::Game), timer_setup)
         .add_systems(OnExit(AppState::Game), timer_destroy)
+        .add_systems(OnEnter(GameState::Run), timer_reset)
         .add_systems(Update, timer.run_if(in_state(GameState::Run)))
         .add_systems(OnEnter(GameState::Won), crate::ui::won::setup_win_screen)
         .add_systems(OnExit(GameState::Won), crate::ui::won::destroy_win_screen)
@@ -89,6 +90,10 @@ pub fn timer_setup(mut commands: Commands, ass: Res<AssetServer>) {
                 Label,
             ));
         });
+}
+
+pub fn timer_reset(timer: Single<&mut TimeCounter>) {
+    timer.into_inner().timer.reset();
 }
 
 pub fn timer_destroy(mut commands: Commands, timer: Single<Entity, With<TimeCounter>>) {

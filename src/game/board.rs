@@ -87,12 +87,27 @@ impl Board {
             }
         }
         self.size = settings.size;
+        self.bomb_count = settings.bombs;
         self.generated = true;
     }
 
     #[inline]
     pub fn neighbours(&self, pos: UVec2) -> Vec<UVec2> {
         Self::neighbour_pos(pos, self.size)
+    }
+
+    #[inline]
+    pub fn is_sloved(&self) -> bool {
+        let mut coverd_fields = 0;
+        for (_, field) in self.fields.iter() {
+            if matches!(field.status, FieldStatus::Closed)
+                || matches!(field.status, FieldStatus::Flaged)
+            {
+                coverd_fields += 1;
+            }
+        }
+
+        return coverd_fields == self.bomb_count;
     }
 
     #[inline]
@@ -233,20 +248,23 @@ impl Board {
                 _ => texture_atlas.index = 3,
             }
 
-            if !ev.open_more || neighbours != 0 {
+            if board.is_sloved() {
+                next_game_state.set(GameState::Won);
                 return;
             }
 
-            let surrounding_bombs = board.neighbour_bombs(pos);
-            let surrounding_flags = board.neighbour_flags(pos);
+            // Wenn im Event open_more wahr ist oder diese Feld keine Bomben Nachbarn hat, sollen alle Felder
+            // in der Umgebung auch geöffnet werden. Diese sollen sich nur öffnen wenn sie auch
+            // keine Bomben als nachbaren haben!
 
-            if surrounding_bombs == surrounding_flags {
-                let surrounding_pos = board.neighbours(pos);
-                for n_pos in surrounding_pos {
-                    commands.trigger(OpenNeighbors {
-                        pos: n_pos,
-                        open_more: false,
-                    });
+            if ev.open_more || neighbours == 0 {
+                if board.neighbour_bombs(pos) == board.neighbour_flags(pos) {
+                    for n_pos in board.neighbours(pos) {
+                        commands.trigger(OpenNeighbors {
+                            pos: n_pos,
+                            open_more: false,
+                        });
+                    }
                 }
             }
         }
