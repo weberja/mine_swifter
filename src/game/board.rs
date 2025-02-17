@@ -1,16 +1,16 @@
-use bevy::prelude::*;
-use bevy_prng::WyRand;
+use std::{fmt::Display, u8};
+
+use bevy::{prelude::*, utils::HashMap};
 use bevy_rand::prelude::Entropy;
-use rand_core::{RngCore, SeedableRng};
+use rand_core::SeedableRng;
 
-use crate::helper::NDim;
+use crate::GameState;
 
-use super::OpenNeighbors;
+use super::{board_generator::BoardGenertor, OpenField, OpenNeighbors};
 
 #[derive(Component)]
 pub struct Field {
-    pub x: u32,
-    pub y: u32,
+    pub pos: UVec2,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -21,10 +21,21 @@ pub enum FieldStatus {
     Flaged,
 }
 
+impl Display for FieldStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FieldStatus::Closed => f.write_str("Status: Closed"),
+            FieldStatus::Open => f.write_str("Status: Opened"),
+            FieldStatus::Flaged => f.write_str("Status: Flagged"),
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct FieldData {
     pub entity: Entity,
     pub status: FieldStatus,
+    pub bomb: bool,
 }
 
 impl Default for FieldData {
@@ -32,64 +43,67 @@ impl Default for FieldData {
         Self {
             entity: Entity::PLACEHOLDER,
             status: FieldStatus::default(),
+            bomb: false,
         }
     }
 }
 
 #[derive(Resource)]
 pub struct Board {
-    pub fields: NDim<FieldData>,
-    pub flags: NDim<bool>,
-    pub bombs: NDim<bool>,
+    pub fields: HashMap<UVec2, FieldData>,
+    pub size: UVec2,
+    pub bomb_count: u32,
     pub generated: bool,
 }
 
 impl Board {
     pub fn new(x: u32, y: u32) -> Self {
+        let size = UVec2 { x, y };
         Self {
-            fields: NDim::new(UVec2 { x, y }, FieldData::default()),
-            flags: NDim::new(UVec2 { x, y }, false),
-            bombs: NDim::new(UVec2 { x, y }, false),
+            fields: HashMap::new(),
+            size,
+            bomb_count: 0,
             generated: false,
         }
     }
 
     pub fn generate_layout(&mut self, first_field: UVec2, settings: &BoardSettings) {
-        self.generated = true;
-
         if !settings.solvable {
-            let res = Self::random_board(
+            let bombs = BoardGenertor::random(
                 first_field,
-                settings.size.x,
-                settings.size.y,
+                settings.size,
                 settings.bombs,
+                &mut Entropy::from_entropy(),
             );
 
-            self.bombs = res;
-            return;
+            for pos in bombs.bombs {
+                let Some(field_data) = self.fields.get_mut(&pos) else {
+                    continue;
+                };
+
+                info!("Set Bomb at {}", pos);
+
+                field_data.bomb = true;
+            }
         }
+        self.size = settings.size;
+        self.generated = true;
     }
 
-    pub fn random_board(first_field: UVec2, w: u32, h: u32, bomb_count: u32) -> NDim<bool> {
-        let mut rng = Entropy::<WyRand>::new(WyRand::seed_from_u64(1234));
-
-        let mut bombs = NDim::new(UVec2 { x: w, y: h }, false);
-
-        for _ in 0..bomb_count {
-            Self::set_bomb(&mut bombs, first_field, w, h, &mut rng);
-        }
-
-        bombs
+    #[inline]
+    pub fn neighbours(&self, pos: UVec2) -> Vec<UVec2> {
+        Self::neighbour_pos(pos, self.size)
     }
 
-    pub fn neighbour_pos(&self, pos: UVec2) -> Vec<UVec2> {
+    #[inline]
+    pub fn neighbour_pos(pos: UVec2, size: UVec2) -> Vec<UVec2> {
         let mut res = Vec::new();
         for w in -1..=1 {
-            if pos.x as i32 + w < 0 || pos.x as i32 + w >= self.bombs.dims().x as i32 {
+            if pos.x as i32 + w < 0 || pos.x as i32 + w >= size.x as i32 {
                 continue;
             }
             for h in -1..=1 {
-                if pos.y as i32 + h < 0 || pos.y as i32 + h >= self.bombs.dims().y as i32 {
+                if pos.y as i32 + h < 0 || pos.y as i32 + h >= size.y as i32 {
                     continue;
                 }
 
@@ -103,14 +117,26 @@ impl Board {
         res
     }
 
-    pub fn neighbour_bombs(&self, pos: UVec2) -> u32 {
+    pub fn neighbour_bombs(&self, pos: UVec2) -> u8 {
         let mut res = 0;
 
-        for n_pos in self.neighbour_pos(pos) {
+        for n_pos in &self.neighbours(pos) {
+            if self.fields.get(n_pos).is_some_and(|&val| val.bomb == true) {
+                res += 1;
+            }
+        }
+
+        res
+    }
+
+    pub fn neighbour_flags(&self, pos: UVec2) -> u8 {
+        let mut res = 0;
+
+        for n_pos in &self.neighbours(pos) {
             if self
-                .bombs
-                .get(n_pos.x as usize, n_pos.y as usize)
-                .is_some_and(|&val| val == true)
+                .fields
+                .get(n_pos)
+                .is_some_and(|val| matches!(val.status, FieldStatus::Flaged))
             {
                 res += 1;
             }
@@ -119,20 +145,30 @@ impl Board {
         res
     }
 
-    pub fn neighbour_flags(&self, pos: UVec2) -> u32 {
-        let mut res = 0;
+    pub fn open_field(trigger: Trigger<OpenField>, board: Res<Board>, mut commands: Commands) {
+        let ev = trigger.event();
+        let pos = ev.pos;
 
-        for n_pos in self.neighbour_pos(pos) {
-            if self
-                .flags
-                .get(n_pos.x as usize, n_pos.y as usize)
-                .is_some_and(|&val| val == true)
-            {
-                res += 1;
-            }
+        info!("OpenField triggert");
+
+        let Some(field_data) = board.fields.get(&pos) else {
+            warn!("Could not get FieldData for the clicked pos");
+            return;
+        };
+
+        if matches!(field_data.status, FieldStatus::Open) || 0 == board.neighbour_flags(pos) {
+            info!("Field is allready open or has 0 neighbours");
+            commands.trigger(OpenNeighbors {
+                pos,
+                open_more: true,
+            });
+        } else if matches!(field_data.status, FieldStatus::Closed) {
+            info!("Field was closed");
+            commands.trigger(OpenNeighbors {
+                pos,
+                open_more: false,
+            });
         }
-
-        res
     }
 
     pub fn open_neighbors(
@@ -140,20 +176,24 @@ impl Board {
         mut sprites: Query<&mut Sprite, With<Field>>,
         mut board: ResMut<Board>,
         settings: Res<BoardSettings>,
+        mut next_game_state: ResMut<NextState<GameState>>,
         mut commands: Commands,
     ) {
         let ev = trigger.event();
         let pos = ev.pos;
 
-        let Some(field_data) = board.fields.get(pos.x as usize, pos.y as usize) else {
+        let Some(field_data) = board.fields.get(&pos) else {
+            warn!("Could not get FieldData for the clicked pos");
+
             return;
         };
 
-        if !matches!(field_data.status, FieldStatus::Closed) {
+        if !matches!(field_data.status, FieldStatus::Closed) && !ev.open_more {
             return;
         }
 
         let Ok(mut sprite) = sprites.get_mut(field_data.entity) else {
+            warn!("Could not find sprite for entity");
             return;
         };
 
@@ -167,22 +207,21 @@ impl Board {
             board.generate_layout(pos, &settings);
         }
 
-        let Some(&is_bomb) = board.bombs.get(pos.x as usize, pos.y as usize) else {
-            warn!("Could not get board data");
+        let Some(field_data) = board.fields.get_mut(&pos) else {
+            warn!("Can not get mutabale field data for pos");
             return;
         };
 
-        let Some(field_data) = board.fields.get_mut(pos.x as usize, pos.y as usize) else {
-            return;
-        };
+        info!("{}", field_data.status);
 
-        if is_bomb {
+        if field_data.bomb {
             info!("Set bomb at {},{}", pos.x, pos.y);
             texture_atlas.index = 2;
+            next_game_state.set(GameState::Lost);
         } else {
             field_data.status = FieldStatus::Open;
 
-            let neighbours = board.neighbour_bombs(UVec2 { x: pos.x, y: pos.y });
+            let neighbours = board.neighbour_bombs(pos);
             info!("Set emtpy with {neighbours} at {},{}", pos.x, pos.y);
 
             match neighbours {
@@ -194,60 +233,29 @@ impl Board {
                 _ => texture_atlas.index = 3,
             }
 
+            if !ev.open_more || neighbours != 0 {
+                return;
+            }
+
             let surrounding_bombs = board.neighbour_bombs(pos);
             let surrounding_flags = board.neighbour_flags(pos);
 
             if surrounding_bombs == surrounding_flags {
-                let surrounding_pos = board.neighbour_pos(pos);
+                let surrounding_pos = board.neighbours(pos);
                 for n_pos in surrounding_pos {
-                    commands.trigger(OpenNeighbors { pos: n_pos });
+                    commands.trigger(OpenNeighbors {
+                        pos: n_pos,
+                        open_more: false,
+                    });
                 }
             }
         }
     }
-
-    fn set_bomb(
-        bombs: &mut NDim<bool>,
-        first_field: UVec2,
-        w: u32,
-        h: u32,
-        rng: &mut Entropy<WyRand>,
-    ) {
-        let random = rng.next_u32() % (w * h);
-        let x = random / w;
-        let y = random % h;
-
-        if bombs
-            .get(x as usize, y as usize)
-            .is_some_and(|&val| val == false)
-            && first_field.x != x
-            && first_field.y != y
-        {
-            info!("Set bomb at {x}, {y}");
-            bombs.set(x as usize, y as usize, true);
-        } else {
-            Self::set_bomb(bombs, first_field, w, h, rng);
-        }
-    }
-}
-
-#[derive(Component)]
-struct BoardSolver;
-
-impl BoardSolver {
-    fn solve(board: Board) -> Result {
-        let solvable = false;
-        Result { solvable }
-    }
-}
-
-pub struct Result {
-    pub solvable: bool,
 }
 
 #[derive(Resource, Copy, Clone)]
 pub struct BoardSettings {
-    pub size: UVec3,
+    pub size: UVec2,
     pub bombs: u32,
     pub solvable: bool,
 }

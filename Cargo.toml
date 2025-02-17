@@ -9,6 +9,7 @@ rand_core = "0.6"
 bevy_rand = "0.9"
 bevy_prng = { version = "0.9", features = ["wyrand"] }
 
+
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
 opt-level = 1

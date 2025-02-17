@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::game::OpenNeighbors;
+use crate::game::OpenField;
 
 use super::{
     board::{Board, BoardAssets, BoardSettings, Field, FieldData, FieldStatus},
@@ -32,17 +32,16 @@ pub fn setup_board(
                         y: (y as f32 - (field.size.y as f32 / 2.0)) * 64.0,
                         z: 0.0,
                     }),
-                    Field { x, y },
+                    Field { pos: (x, y).into() },
                     GameObject,
                 ))
                 .observe(handle_click)
                 .id();
-            board.fields.set(
-                x as usize,
-                y as usize,
+            board.fields.insert(
+                (x, y).into(),
                 FieldData {
                     entity: id,
-                    status: FieldStatus::default(),
+                    ..default()
                 },
             );
         }
@@ -60,36 +59,25 @@ fn handle_click(
     info!("Click!");
     let id = ev.entity();
     let button = ev.button;
-
     let Ok((mut sprite, field)) = sprites.get_mut(id) else {
+        info!("No Target");
         return;
     };
 
     if button == PointerButton::Primary {
-        commands.trigger(OpenNeighbors {
-            pos: UVec2 {
-                x: field.x,
-                y: field.y,
-            },
-        });
+        commands.trigger(OpenField { pos: field.pos });
     } else if PointerButton::Secondary == button {
         let Some(texture_atlas) = &mut sprite.texture_atlas else {
             warn!("Could not get texture atlas for fields");
             return;
         };
 
-        if texture_atlas.index == 1 || texture_atlas.index == 2 {
-            return;
-        }
-
-        if let Some(field_data) = board.fields.get_mut(field.x as usize, field.y as usize) {
+        if let Some(field_data) = board.fields.get_mut(&field.pos) {
             if matches!(field_data.status, FieldStatus::Flaged) {
                 field_data.status = FieldStatus::Open;
-                board.flags.set(field.x as usize, field.y as usize, false);
                 texture_atlas.index = 0;
             } else {
                 field_data.status = FieldStatus::Flaged;
-                board.flags.set(field.x as usize, field.y as usize, true);
                 texture_atlas.index = 1;
             }
         }

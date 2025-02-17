@@ -1,4 +1,8 @@
+mod buttons;
+mod lost;
 mod ui;
+mod won;
+
 use std::{ops::Sub, time::Duration};
 
 use bevy::{prelude::*, time::Stopwatch};
@@ -17,7 +21,14 @@ pub fn ui_plugin(app: &mut App) {
     app.add_plugins(ui::ui_plugin)
         .add_systems(OnEnter(AppState::Game), timer_setup)
         .add_systems(OnExit(AppState::Game), timer_destroy)
-        .add_systems(Update, timer.run_if(in_state(GameState::Run)));
+        .add_systems(Update, timer.run_if(in_state(GameState::Run)))
+        .add_systems(OnEnter(GameState::Won), crate::ui::won::setup_win_screen)
+        .add_systems(OnExit(GameState::Won), crate::ui::won::destroy_win_screen)
+        .add_systems(OnEnter(GameState::Lost), crate::ui::lost::setup_lost_screen)
+        .add_systems(
+            OnExit(GameState::Lost),
+            crate::ui::lost::destroy_lost_screen,
+        );
 }
 
 pub fn timer(

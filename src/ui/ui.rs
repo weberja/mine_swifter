@@ -1,81 +1,68 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, ui, window::PrimaryWindow, winit::cursor::CursorIcon};
 
-use crate::{game::ResetBoard, AppState};
+use crate::AppState;
 
-const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.35, 0.35);
+use super::buttons::{button_color_system, button_interaction_system, rest_button_setup};
+
+pub const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+pub const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
+pub const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.35, 0.35);
+
+#[derive(Resource)]
+struct UiAssets {
+    cursor: Handle<Image>,
+    button: Handle<Image>,
+    button_pressed: Handle<Image>,
+    button_hover: Handle<Image>,
+}
+
+#[derive(Resource)]
+struct FontAssets {
+    fira_code: Handle<Font>,
+    future: Handle<Font>,
+    future_narrow: Handle<Font>,
+}
 
 pub fn ui_plugin(app: &mut App) {
-    app.add_systems(OnEnter(AppState::Game), setup)
+    app.add_systems(OnEnter(AppState::Game), rest_button_setup)
+        .add_systems(
+            OnEnter(AppState::Loading),
+            (load_ui_assets, cursor_setup.after(load_ui_assets)),
+        )
         .add_systems(OnExit(AppState::Game), cleanup)
-        .add_systems(Update, button_system.run_if(in_state(AppState::Game)));
+        .add_systems(
+            Update,
+            (
+                button_interaction_system,
+                button_color_system.run_if(in_state(AppState::Game)),
+            ),
+        );
 }
 
-fn button_system(
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, &mut BorderColor),
-        (Changed<Interaction>, With<Button>),
-    >,
+fn cursor_setup(
     mut commands: Commands,
+    assets: Res<UiAssets>,
+    window: Single<Entity, With<PrimaryWindow>>,
 ) {
-    for (interaction, mut color, mut border_color) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                *color = PRESSED_BUTTON.into();
-                border_color.0 = Color::srgb(0.5, 0.5, 0.5);
-
-                commands.trigger(ResetBoard);
-            }
-            Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
-                border_color.0 = Color::WHITE;
-            }
-            Interaction::None => {
-                *color = NORMAL_BUTTON.into();
-                border_color.0 = Color::BLACK;
-            }
-        }
-    }
+    commands
+        .entity(window.into_inner())
+        .insert(CursorIcon::Custom(
+            bevy::winit::cursor::CustomCursor::Image {
+                handle: assets.cursor.clone(),
+                hotspot: (5, 5),
+            },
+        ));
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // ui camera
-    commands
-        .spawn(Node {
-            width: Val::Px(200.),
-            height: Val::Px(85.),
-            align_items: AlignItems::FlexEnd,
-            justify_content: JustifyContent::FlexEnd,
-            ..default()
-        })
-        .with_children(|parent| {
-            parent
-                .spawn((
-                    Button,
-                    Node {
-                        width: Val::Px(150.0),
-                        height: Val::Px(65.0),
-                        border: UiRect::all(Val::Px(5.0)),
-                        // horizontally center child text
-                        justify_content: JustifyContent::Center,
-                        // vertically center child text
-                        align_items: AlignItems::Center,
-                        ..default()
-                    },
-                    BorderColor(Color::BLACK),
-                    BackgroundColor(NORMAL_BUTTON),
-                ))
-                .with_child((
-                    Text::new("Reset"),
-                    TextFont {
-                        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                        font_size: 33.0,
-                        ..default()
-                    },
-                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                ));
-        });
+fn load_ui_assets(mut commands: Commands, ass: Res<AssetServer>) {
+    let ui = UiAssets {
+        cursor: ass.load("ui/cursor/PNG/Outline/Default/pointer_a.png"),
+        button: ass.load(""),
+        button_pressed: ass.load(""),
+        button_hover: ass.load(""),
+    };
+
+    commands.insert_resource(ui);
 }
 
 fn cleanup() {}

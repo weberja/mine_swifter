@@ -2,7 +2,6 @@
 #![feature(duration_constructors)]
 
 mod game;
-mod helper;
 mod ui;
 
 use bevy::prelude::*;
