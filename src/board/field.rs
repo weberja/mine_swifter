@@ -13,6 +13,7 @@ pub enum FieldStatus {
 
 #[derive(Resource)]
 pub struct FieldData {
+    pub entity: Entity,
     pub status: FieldStatus,
     pub bomb: bool,
 }
@@ -20,8 +21,9 @@ pub struct FieldData {
 impl Default for FieldData {
     fn default() -> Self {
         Self {
-            bomb: false,
-            ..default()
+            entity: Entity::PLACEHOLDER,
+            status: Default::default(),
+            bomb: Default::default(),
         }
     }
 }

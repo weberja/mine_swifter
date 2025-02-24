@@ -4,14 +4,15 @@
 #import bevy_sprite::mesh2d_view_bindings::view
 #import bevy_pbr::utils::coords_to_viewport_uv
 
-const aspect: f32 = 1.0;
-const alpha: f32 = 0.5;
 
-@group(2) @binding(0) var texture: texture_2d_array<f32>;
-@group(2) @binding(1) var texture_sampler: sampler;
-@group(2) @binding(2) var<uniform> index: u32;
+@group(2) @binding(0) var<uniform> lane_width: f32;
+@group(2) @binding(1) var<uniform> pitch: vec2f;
 
 @fragment
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
-    return textureSample(texture, texture_sampler, mesh.uv, index) * vec4f(1.0, 1.0, 1.0, 1.0);
+    if (mesh.position.x - 32.) % pitch.x < 1 || (mesh.position.y - 8.) % pitch.y < 1 {
+        return vec4f(0., 0., 0., 0.75);
+    } else {
+        return vec4f(0., 0., 0., 0.);
+    }
 }

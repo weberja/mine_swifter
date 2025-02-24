@@ -13,7 +13,14 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, states, startup_assets, ui::init, game::game))
+        .add_plugins((
+            DefaultPlugins,
+            states,
+            startup_assets,
+            ui::init,
+            game::game,
+            materials::init,
+        ))
         .add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, setup)
         .run();

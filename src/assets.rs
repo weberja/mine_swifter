@@ -6,7 +6,7 @@ use crate::states::AppState;
 #[derive(Resource, AssetCollection)]
 pub struct BoardAssets {
     #[asset(path = "fields.png")]
-    #[asset(image(array_texture_layers = 9))]
+    #[asset(image(array_texture_layers = 11))]
     pub field: Handle<Image>,
 }
 

@@ -8,3 +8,9 @@ pub struct CreateBoard;
 
 #[derive(Event)]
 pub struct DestroyBoard;
+
+#[derive(Event)]
+pub struct GameLost;
+
+#[derive(Event)]
+pub struct GameWin;

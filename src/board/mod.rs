@@ -2,7 +2,7 @@ use bevy::{ecs::system::Resource, math::UVec2};
 
 pub mod board_data;
 pub mod board_solver;
-mod events;
+pub mod events;
 pub mod field;
 
 #[derive(Resource)]

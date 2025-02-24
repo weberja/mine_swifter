@@ -3,6 +3,7 @@ use bevy::{prelude::*, utils::info};
 use crate::{
     board::{
         board_data::Board,
+        events::OpenField,
         field::{Field, FieldStatus},
     },
     materials::field::FieldMaterial,
@@ -25,7 +26,7 @@ pub fn handle_click(
     };
 
     if button == PointerButton::Primary {
-        //commands.trigger(OpenField { pos: field.pos });
+        commands.trigger(OpenField(field.0));
         info("Clicked with left mouse");
     } else if PointerButton::Secondary == button {
         let Some(material_data) = &mut materials.get_mut(material.id()) else {
