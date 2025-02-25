@@ -119,8 +119,7 @@ fn board_setup(
             64. * settings.size.y as f32,
         ))),
         MeshMaterial2d(grid_materials.add(GridMaterial {
-            line_width: 1.0,
-            pitch: (64., 64.).into(),
+            squars: settings.size.as_vec2(),
         })),
         Transform::from_translation(Vec3 {
             x: 0.,

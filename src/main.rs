@@ -7,6 +7,8 @@ pub mod ui;
 
 use assets::startup_assets;
 use bevy::prelude::*;
+use bevy_prng::ChaCha8Rng;
+use bevy_rand::plugin::EntropyPlugin;
 use states::states;
 
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -22,6 +24,7 @@ fn main() {
             materials::init,
         ))
         .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
         .add_systems(Startup, setup)
         .run();
 }
