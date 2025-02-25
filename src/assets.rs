@@ -13,7 +13,7 @@ pub struct BoardAssets {
 #[derive(Resource, AssetCollection)]
 pub struct UiAssets {
     #[asset(path = "ui/cursor/PNG/Outline/Default/pointer_c.png")]
-    cursor: Handle<Image>,
+    pub cursor: Handle<Image>,
     /*#[asset(path = "ui/cursor/PNG/Outline/Default/pointer_c.png")]
     button: Handle<Image>,
     #[asset(path = "ui/cursor/PNG/Outline/Default/pointer_c.png")]

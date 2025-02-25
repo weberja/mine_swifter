@@ -1,8 +1,5 @@
 use background::{on_resize_background, setup_background};
-use bevy::{
-    prelude::*,
-    sprite::{AlphaMode2d, Material2d},
-};
+use bevy::{prelude::*, sprite::AlphaMode2d};
 use click_on_board::handle_click;
 use events::{CreateBoard, DestroyBoard};
 
