@@ -1,35 +1,50 @@
 use crate::{
-    board::{board_data::Board, events::OpenField, field::Field},
+    board::{
+        board_data::Board,
+        events::OpenField,
+        field::{Field, FieldStatus},
+    },
     materials::field::FieldMaterial,
+    states::GameState,
+    utils::random::RandomSource,
 };
 use bevy::{prelude::*, utils::HashSet};
-
-use super::events::GameLost;
+use rand_chacha::ChaCha8Rng;
 
 pub fn open_field(
     trigger: Trigger<OpenField>,
     mut board: ResMut<Board>,
-    mut commands: Commands,
     fields: Query<&MeshMaterial2d<FieldMaterial>, With<Field>>,
     mut materials: ResMut<Assets<FieldMaterial>>,
+    rng: ResMut<RandomSource<ChaCha8Rng>>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
     let mut visited = HashSet::new();
     let mut to_visit = HashSet::from([trigger.0]);
 
     if !board.generated {
-        board.generate();
+        board.generate(rng, trigger.0);
     }
+
+    let max_depth = 1;
+    let mut depth = 0;
 
     while !to_visit.is_empty() {
         let working_list = to_visit.clone();
         to_visit.clear();
-        for pos in working_list {
+
+        for pos in working_list.clone() {
             visited.insert(pos);
 
             let Some(field_data) = board.fields.get_mut(&pos) else {
                 warn!("Can not get mutabale field data for pos");
                 return;
             };
+
+            // skip field if it is a flag
+            if matches!(field_data.status, FieldStatus::Flaged) {
+                continue;
+            }
 
             let Ok(material) = fields.get(field_data.entity) else {
                 warn!("Could not find material for entity");
@@ -43,7 +58,8 @@ pub fn open_field(
 
             if board.is_bomb(pos) {
                 to_visit.clear();
-                commands.trigger(GameLost);
+                material_data.index = 1;
+                next_state.set(GameState::Lost);
                 break;
             } else {
                 let count_neighbors = board.bombs(pos);
@@ -62,15 +78,25 @@ pub fn open_field(
                     _ => material_data.index = 2,
                 }
 
-                if board.fullfilled(pos) {
+                info!(
+                    "Field {} fullfilled: {}, empty: {}",
+                    pos,
+                    board.fullfilled(pos),
+                    (depth >= max_depth && board.bombs(pos) == 0)
+                );
+
+                if (board.fullfilled(pos) && depth < max_depth)
+                    || (depth >= max_depth && board.bombs(pos) == 0)
+                {
                     to_visit.extend(
                         board
                             .neighbors(pos)
                             .iter()
-                            .filter(|&var| !visited.contains(var)),
+                            .filter(|&var| !visited.contains(var) && !working_list.contains(var)),
                     );
                 }
             }
+            depth += 1;
         }
     }
 }

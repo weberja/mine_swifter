@@ -8,6 +8,9 @@ bevy = { version = "0.15.2", features = ["bevy_dev_tools"] }
 bevy_asset_loader = { version = "0.22.0", features = ["2d"] }
 bevy-inspector-egui = "0.29.1"
 
+rand = "0.9"
+rand_chacha = "0.9"
+
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
 opt-level = 1

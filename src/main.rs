@@ -4,14 +4,15 @@ pub mod game;
 pub mod materials;
 pub mod states;
 pub mod ui;
+pub mod utils;
 
 use assets::startup_assets;
 use bevy::prelude::*;
-use bevy_prng::ChaCha8Rng;
-use bevy_rand::plugin::EntropyPlugin;
+use rand_chacha::ChaCha8Rng;
 use states::states;
 
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use utils::random::RandomSource;
 
 fn main() {
     App::new()
@@ -24,8 +25,8 @@ fn main() {
             materials::init,
         ))
         .add_plugins(WorldInspectorPlugin::new())
-        .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
         .add_systems(Startup, setup)
+        .insert_resource(RandomSource::<ChaCha8Rng>::default())
         .run();
 }
 

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    game::events::GameLost,
     states::GameState,
     ui::components::buttons::{game_buttons::GameButton, NORMAL_BUTTON},
 };

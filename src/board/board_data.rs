@@ -1,4 +1,11 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{
+    prelude::*,
+    utils::{HashMap, HashSet},
+};
+use rand::distr::{Distribution, Uniform};
+use rand_chacha::ChaCha8Rng;
+
+use crate::utils::random::RandomSource;
 
 use super::field::{FieldData, FieldStatus};
 
@@ -22,7 +29,33 @@ impl Board {
         }
     }
 
-    pub fn generate(&mut self) {}
+    pub fn generate(&mut self, mut rng: ResMut<RandomSource<ChaCha8Rng>>, start_field: UVec2) {
+        let mut bombs: HashSet<UVec2> = HashSet::new();
+        let mut counter = 0;
+        self.generated = true;
+
+        let distribution_x = Uniform::new(0, self.size.x).expect("Could not create Distribution");
+        let distribution_y = Uniform::new(0, self.size.y).expect("Could not create Distribution");
+
+        while counter < self.bomb_count {
+            let pos: UVec2 = (
+                distribution_x.sample(&mut rng),
+                distribution_y.sample(&mut rng),
+            )
+                .into();
+
+            if !bombs.contains(&pos) && pos != start_field {
+                let Some(field) = self.fields.get_mut(&pos) else {
+                    warn!("Could not set bomb for field {}", pos);
+                    self.generated = false;
+                    return;
+                };
+                field.bomb = true;
+                bombs.insert(pos);
+                counter += 1;
+            }
+        }
+    }
 
     pub fn is_bomb(&self, pos: UVec2) -> bool {
         self.fields.get(&pos).unwrap().bomb
