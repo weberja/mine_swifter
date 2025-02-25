@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use background::{on_resize_background, setup_background};
 use bevy::{prelude::*, sprite::AlphaMode2d};
 use click_on_board::handle_click;
@@ -54,6 +56,7 @@ pub fn board_reset_observer(
 ) {
     board_destroy(&mut commands, objects);
 }
+
 pub fn board_destroy_observer(
     _trigger: Trigger<DestroyBoard>,
     mut commands: Commands,
