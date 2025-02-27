@@ -5,7 +5,8 @@
 #import bevy_pbr::utils::coords_to_viewport_uv
 
 struct GridMaterial {
-    squares: vec2<f32>,
+    squares: vec2f,
+    _padding: vec2u,
   }
 
 @group(2) @binding(0) var<uniform> material: GridMaterial;

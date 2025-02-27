@@ -7,11 +7,17 @@
 const aspect: f32 = 1.0;
 const alpha: f32 = 0.5;
 
+struct FieldMaterial {
+  index: u32,
+  _padding: vec3u
+  }
+
 @group(2) @binding(0) var texture: texture_2d_array<f32>;
 @group(2) @binding(1) var texture_sampler: sampler;
-@group(2) @binding(2) var<uniform> index: u32;
+@group(2) @binding(2) var<uniform> material: FieldMaterial;
+
 
 @fragment
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
-    return textureSample(texture, texture_sampler, mesh.uv, index) * vec4f(1.0, 1.0, 1.0, 1.0);
+    return textureSample(texture, texture_sampler, mesh.uv, material.index) * vec4f(1.0, 1.0, 1.0, 1.0);
 }

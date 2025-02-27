@@ -19,12 +19,14 @@ pub struct GridMaterial {
 #[derive(Clone, Default, ShaderType)]
 pub struct GridMaterialUniform {
     pub squars: Vec2,
+    _padding: UVec2,
 }
 
 impl AsBindGroupShaderType<GridMaterialUniform> for GridMaterial {
     fn as_bind_group_shader_type(&self, _images: &RenderAssets<GpuImage>) -> GridMaterialUniform {
         GridMaterialUniform {
             squars: self.squars,
+            _padding: UVec2::default(),
         }
     }
 }
