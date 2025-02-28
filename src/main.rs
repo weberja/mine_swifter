@@ -1,5 +1,6 @@
 pub mod assets;
 pub mod board;
+mod camera;
 pub mod game;
 pub mod materials;
 pub mod states;
@@ -25,12 +26,8 @@ fn main() {
             ui::init,
             game::game,
             materials::init,
+            camera::camera,
         ))
-        .add_systems(Startup, setup)
         .insert_resource(RandomSource::<ChaCha8Rng>::default())
         .run();
-}
-
-fn setup(mut commands: Commands) {
-    commands.spawn(Camera2d);
 }

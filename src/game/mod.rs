@@ -2,12 +2,13 @@
 
 use background::{on_resize_background, setup_background};
 use bevy::{prelude::*, sprite::AlphaMode2d};
-use click_on_board::{handle_click, handle_touch};
+use click_on_board::handle_click;
 use events::{CreateBoard, DestroyBoard};
 
 use crate::{
     assets::BoardAssets,
     board::{board_data::Board, field::Field, BoardSettings},
+    camera::ZoomableObject,
     materials::{field::FieldMaterial, grid::GridMaterial},
     states::AppState,
 };
@@ -91,46 +92,55 @@ fn board_setup(
     let mut board = Board::new(settings.size, settings.bomb_count);
     let mesh = meshes.add(Rectangle::new(64., 64.));
 
-    for x in 0..settings.size.x {
-        for y in 0..settings.size.y {
-            let id = commands
-                .spawn((
-                    Mesh2d(mesh.clone()),
-                    MeshMaterial2d(field_materials.add(FieldMaterial {
-                        texture: assets.field.clone(),
-                        alpha_mode: AlphaMode2d::Blend,
-                        index: 0,
-                    })),
-                    Transform::from_translation(Vec3 {
-                        x: 32. - (settings.size.x as f32 * 64. / 2.) + (x as f32 * 64.0),
-                        y: 32. - (settings.size.y as f32 * 64. / 2.) + (y as f32 * 64.0),
-                        z: -10.0,
-                    }),
-                    Field((x, y).into()),
-                    GameObject,
-                ))
-                .observe(handle_click)
-                //.observe(handle_touch)
-                .id();
-            board.add_field((x, y).into(), id);
-        }
-    }
+    commands
+        .spawn((
+            Transform::default(),
+            Visibility::default(),
+            ZoomableObject,
+            PickingBehavior::IGNORE,
+        ))
+        .with_children(|parent| {
+            for x in 0..settings.size.x {
+                for y in 0..settings.size.y {
+                    let id = parent
+                        .spawn((
+                            Mesh2d(mesh.clone()),
+                            MeshMaterial2d(field_materials.add(FieldMaterial {
+                                texture: assets.field.clone(),
+                                alpha_mode: AlphaMode2d::Blend,
+                                index: 0,
+                            })),
+                            Transform::from_translation(Vec3 {
+                                x: 32. - (settings.size.x as f32 * 64. / 2.) + (x as f32 * 64.0),
+                                y: 32. - (settings.size.y as f32 * 64. / 2.) + (y as f32 * 64.0),
+                                z: -10.0,
+                            }),
+                            Field((x, y).into()),
+                            GameObject,
+                        ))
+                        .observe(handle_click)
+                        //.observe(handle_touch)
+                        .id();
+                    board.add_field((x, y).into(), id);
+                }
+            }
 
-    commands.spawn((
-        Mesh2d(meshes.add(Rectangle::new(
-            64. * settings.size.x as f32,
-            64. * settings.size.y as f32,
-        ))),
-        MeshMaterial2d(grid_materials.add(GridMaterial {
-            squars: settings.size.as_vec2(),
-        })),
-        Transform::from_translation(Vec3 {
-            x: 0.,
-            y: 0.,
-            z: 0.0,
-        }),
-        PickingBehavior::IGNORE,
-    ));
+            parent.spawn((
+                Mesh2d(meshes.add(Rectangle::new(
+                    64. * settings.size.x as f32,
+                    64. * settings.size.y as f32,
+                ))),
+                MeshMaterial2d(grid_materials.add(GridMaterial {
+                    squars: settings.size.as_vec2(),
+                })),
+                Transform::from_translation(Vec3 {
+                    x: 0.,
+                    y: 0.,
+                    z: 0.0,
+                }),
+                PickingBehavior::IGNORE,
+            ));
+        });
 
     commands.insert_resource(board);
 }
