@@ -7,24 +7,25 @@ pub mod ui;
 pub mod utils;
 
 use assets::startup_assets;
-use bevy::prelude::*;
+use bevy::{asset::AssetMetaCheck, prelude::*};
 use rand_chacha::ChaCha8Rng;
 use states::states;
 
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use utils::random::RandomSource;
 
 fn main() {
     App::new()
         .add_plugins((
-            DefaultPlugins,
+            DefaultPlugins.set(AssetPlugin {
+                meta_check: AssetMetaCheck::Never,
+                ..default()
+            }),
             states,
             startup_assets,
             ui::init,
             game::game,
             materials::init,
         ))
-        .add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, setup)
         .insert_resource(RandomSource::<ChaCha8Rng>::default())
         .run();
