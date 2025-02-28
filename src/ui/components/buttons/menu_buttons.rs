@@ -29,8 +29,24 @@ pub fn menu_interaction(
                     });
                     commands.trigger(CreateBoard);
                 }
-                MenuButton::S16x16 => todo!(),
-                MenuButton::S30x16 => todo!(),
+                MenuButton::S16x16 => {
+                    next_state.set(AppState::Game);
+                    commands.insert_resource(BoardSettings {
+                        size: (16, 16).into(),
+                        solvable: false,
+                        bomb_count: 40,
+                    });
+                    commands.trigger(CreateBoard);
+                }
+                MenuButton::S30x16 => {
+                    next_state.set(AppState::Game);
+                    commands.insert_resource(BoardSettings {
+                        size: (30, 16).into(),
+                        solvable: false,
+                        bomb_count: 99,
+                    });
+                    commands.trigger(CreateBoard);
+                }
                 MenuButton::Challenge => todo!(),
             }
         }

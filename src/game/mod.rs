@@ -2,7 +2,7 @@
 
 use background::{on_resize_background, setup_background};
 use bevy::{prelude::*, sprite::AlphaMode2d};
-use click_on_board::handle_click;
+use click_on_board::{handle_click, handle_touch};
 use events::{CreateBoard, DestroyBoard};
 
 use crate::{
@@ -24,6 +24,8 @@ pub fn game(app: &mut App) {
     app.add_observer(board_setup_observer)
         .add_observer(board_destroy_observer)
         .add_observer(open_field::open_field)
+        .add_observer(click_on_board::flag_interaction_event)
+        .add_observer(click_on_board::open_interaction_event)
         .add_systems(OnExit(AppState::LoadingAssets), setup_background)
         .add_systems(
             Update,
@@ -108,6 +110,7 @@ fn board_setup(
                     GameObject,
                 ))
                 .observe(handle_click)
+                //.observe(handle_touch)
                 .id();
             board.add_field((x, y).into(), id);
         }
