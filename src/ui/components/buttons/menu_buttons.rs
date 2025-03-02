@@ -27,7 +27,6 @@ pub fn menu_interaction(
                         solvable: false,
                         bomb_count: 10,
                     });
-                    commands.trigger(CreateBoard);
                 }
                 MenuButton::S16x16 => {
                     next_state.set(AppState::Game);
@@ -36,7 +35,6 @@ pub fn menu_interaction(
                         solvable: false,
                         bomb_count: 40,
                     });
-                    commands.trigger(CreateBoard);
                 }
                 MenuButton::S30x16 => {
                     next_state.set(AppState::Game);
@@ -45,7 +43,6 @@ pub fn menu_interaction(
                         solvable: false,
                         bomb_count: 99,
                     });
-                    commands.trigger(CreateBoard);
                 }
                 MenuButton::Challenge => todo!(),
             }

@@ -42,6 +42,7 @@ pub fn setup_lost_screen(mut commands: Commands, ass: Res<AssetServer>) {
                     },
                     BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.0)),
                 ))
+                .insert(PickingBehavior::IGNORE)
                 .with_children(|parent| {
                     parent
                         .spawn((
@@ -57,6 +58,7 @@ pub fn setup_lost_screen(mut commands: Commands, ass: Res<AssetServer>) {
                             },
                             BackgroundColor(Color::srgba(0.65, 0.65, 0.65, 0.9)),
                         ))
+                        .insert(PickingBehavior::IGNORE)
                         .with_children(|parent| {
                             parent.spawn((
                                 Text::new("Verloren :("),
