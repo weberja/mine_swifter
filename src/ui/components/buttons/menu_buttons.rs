@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::{board::BoardSettings, game::events::CreateBoard, states::AppState};
+use crate::{board::BoardSettings, states::AppState};
 
 #[derive(Component)]
 pub enum MenuButton {
