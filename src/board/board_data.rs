@@ -29,6 +29,15 @@ impl Board {
         }
     }
 
+    pub fn solved(&self) -> bool {
+        for field in self.fields.values() {
+            if !field.bomb && field.status != FieldStatus::Open {
+                return false;
+            }
+        }
+        true
+    }
+
     pub fn generate(&mut self, mut rng: ResMut<RandomSource<ChaCha8Rng>>, start_field: UVec2) {
         let mut bombs: HashSet<UVec2> = HashSet::new();
         let mut counter = 0;

@@ -56,14 +56,15 @@ pub fn open_field(
                 return;
             };
 
-            if board.is_bomb(pos) {
+            if field_data.bomb {
                 to_visit.clear();
                 material_data.index = 1;
                 next_state.set(GameState::Lost);
                 break;
             } else {
-                let count_neighbors = board.bombs(pos);
+                field_data.status = FieldStatus::Open;
 
+                let count_neighbors = board.bombs(pos);
                 info!("{} with {}", pos, count_neighbors);
 
                 match count_neighbors {

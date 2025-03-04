@@ -3,7 +3,7 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct Field(pub UVec2);
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FieldStatus {
     #[default]
     Closed,

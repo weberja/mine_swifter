@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{picking::pointer::PointerButton, prelude::*, utils::info};
+use bevy::{picking::pointer::PointerButton, prelude::*, ui::Interaction, utils::info};
 
 use crate::{
     board::{
@@ -16,6 +16,9 @@ pub struct OpenInteraction;
 
 #[derive(Event)]
 pub struct FlagInteraction;
+
+#[derive(Event)]
+pub struct BoardInteraction;
 
 pub fn open_interaction_event(
     trigger: Trigger<OpenInteraction>,
@@ -69,6 +72,7 @@ pub fn handle_click(ev: Trigger<Pointer<Click>>, mut commands: Commands) {
     } else if button == PointerButton::Secondary {
         commands.trigger_targets(FlagInteraction, id);
     }
+    commands.trigger(BoardInteraction);
 }
 
 pub fn handle_touch(
@@ -88,6 +92,7 @@ pub fn handle_touch(
             timer.tick(time.elapsed());
             if timer.duration() >= Duration::from_secs(3) {
                 commands.trigger_targets(FlagInteraction, trigger.entity());
+                commands.trigger(BoardInteraction);
             }
         }
         bevy::input::touch::TouchPhase::Canceled => *moved = false,

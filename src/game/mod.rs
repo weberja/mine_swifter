@@ -2,11 +2,11 @@
 
 use background::{on_resize_background, setup_background};
 use bevy::{prelude::*, sprite::AlphaMode2d};
-use click_on_board::handle_click;
+use click_on_board::{handle_click, BoardInteraction, OpenInteraction};
 
 use crate::{
     assets::BoardAssets,
-    board::{board_data::Board, events::RestartGame, field::Field, BoardSettings},
+    board::{self, board_data::Board, events::RestartGame, field::Field, BoardSettings},
     camera::ZoomableObject,
     materials::{field::FieldMaterial, grid::GridMaterial},
     states::{AppState, GameState},
@@ -25,6 +25,7 @@ pub fn game(app: &mut App) {
         .add_observer(click_on_board::flag_interaction_event)
         .add_observer(click_on_board::open_interaction_event)
         .add_observer(board_rest)
+        .add_observer(won)
         .add_systems(OnExit(AppState::LoadingAssets), setup_background)
         .add_systems(OnExit(AppState::Game), board_destroy)
         .add_systems(OnEnter(AppState::Game), board_setup)
@@ -32,6 +33,16 @@ pub fn game(app: &mut App) {
             Update,
             on_resize_background.run_if(not(in_state(AppState::LoadingAssets))),
         );
+}
+
+fn won(
+    _trigger: Trigger<BoardInteraction>,
+    mut next_state: ResMut<NextState<GameState>>,
+    board: Res<Board>,
+) {
+    if board.solved() {
+        next_state.set(GameState::Won);
+    }
 }
 
 fn board_rest(
