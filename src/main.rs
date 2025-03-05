@@ -2,12 +2,11 @@ pub mod assets;
 pub mod board;
 mod camera;
 pub mod game;
+mod key_controls;
 pub mod materials;
 pub mod states;
 pub mod ui;
 pub mod utils;
-
-use std::default;
 
 use assets::startup_assets;
 use bevy::{asset::AssetMetaCheck, prelude::*};
@@ -27,7 +26,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "MineSwifter".into(),
-                        fit_canvas_to_parent: true,
+                        //   fit_canvas_to_parent: true,
                         ..default()
                     }),
                     ..default()
@@ -38,7 +37,10 @@ fn main() {
             game::game,
             materials::init,
             camera::camera,
+            key_controls::init,
         ))
         .insert_resource(RandomSource::<ChaCha8Rng>::default())
         .run();
 }
+
+fn fit_to_screen() {}

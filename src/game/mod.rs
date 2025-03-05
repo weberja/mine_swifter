@@ -2,11 +2,11 @@
 
 use background::{on_resize_background, setup_background};
 use bevy::{prelude::*, sprite::AlphaMode2d};
-use click_on_board::{handle_click, BoardInteraction, OpenInteraction};
+use click_on_board::{handle_down, handle_up, update_touch_timer, BoardInteraction, TouchStatus};
 
 use crate::{
     assets::BoardAssets,
-    board::{self, board_data::Board, events::RestartGame, field::Field, BoardSettings},
+    board::{board_data::Board, events::RestartGame, field::Field, BoardSettings},
     camera::ZoomableObject,
     materials::{field::FieldMaterial, grid::GridMaterial},
     states::{AppState, GameState},
@@ -26,12 +26,16 @@ pub fn game(app: &mut App) {
         .add_observer(click_on_board::open_interaction_event)
         .add_observer(board_rest)
         .add_observer(won)
+        .init_resource::<TouchStatus>()
         .add_systems(OnExit(AppState::LoadingAssets), setup_background)
         .add_systems(OnExit(AppState::Game), board_destroy)
         .add_systems(OnEnter(AppState::Game), board_setup)
         .add_systems(
             Update,
-            on_resize_background.run_if(not(in_state(AppState::LoadingAssets))),
+            (
+                on_resize_background.run_if(not(in_state(AppState::LoadingAssets))),
+                update_touch_timer,
+            ),
         );
 }
 
@@ -92,8 +96,8 @@ fn board_rest(
                             }),
                             Field((x, y).into()),
                         ))
-                        .observe(handle_click)
-                        //.observe(handle_touch)
+                        .observe(handle_up)
+                        .observe(handle_down)
                         .id();
                     board.add_field((x, y).into(), id);
                 }
@@ -156,8 +160,8 @@ fn board_setup(
                             }),
                             Field((x, y).into()),
                         ))
-                        .observe(handle_click)
-                        //.observe(handle_touch)
+                        .observe(handle_up)
+                        .observe(handle_down)
                         .id();
                     board.add_field((x, y).into(), id);
                 }

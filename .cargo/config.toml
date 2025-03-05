@@ -11,6 +11,3 @@ linker = "clang"
 # for Windows
 [target.x86_64-pc-windows-msvc]
 linker = "rust-lld.exe"
-
-[target.wasm32-unknown-unknown]
-rustflags = ['--cfg', 'getrandom_backend="wasm-js"']

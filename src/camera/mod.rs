@@ -6,6 +6,8 @@ use bevy::{
 };
 use events::{ResetView, Zoom};
 
+use crate::{assets::BoardAssets, board::BoardSettings};
+
 #[derive(Component)]
 struct MainCamera;
 
@@ -40,4 +42,25 @@ fn zoom(trigger: Trigger<Zoom>, mut obj: Single<&mut Transform, With<ZoomableObj
         .clamp(Vec3::new(0.4, 0.4, f32::MIN), Vec3::new(30., 30., f32::MAX));
 }
 
-fn reset_view(trigger: Trigger<ResetView>, mut obj: Single<&mut Transform, With<ZoomableObject>>) {}
+fn reset_view(
+    _trigger: Trigger<ResetView>,
+    mut obj: Single<(&GlobalTransform, &mut Transform), With<ZoomableObject>>,
+    settings: Res<BoardSettings>,
+    assets: Res<BoardAssets>,
+    images: Res<Assets<Image>>,
+    camera: Single<(&GlobalTransform, &Camera)>,
+) {
+    let Some(image) = images.get(&assets.field) else {
+        error!("Could not get Asset");
+        return;
+    };
+
+    let (global_trans, trans) = obj.into_inner();
+
+    let size = (image.size() / 11) * settings.size;
+
+    let upper_left = camera
+        .1
+        .world_to_viewport(camera.0, global_trans.translation());
+    let lower_right = camera.1.world_to_viewport(camera.0, Vec3::new(0., 0., 0.));
+}

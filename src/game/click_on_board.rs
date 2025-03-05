@@ -1,6 +1,4 @@
-use std::time::Duration;
-
-use bevy::{picking::pointer::PointerButton, prelude::*, ui::Interaction, utils::info};
+use bevy::{picking::pointer::PointerButton, prelude::*, utils::info};
 
 use crate::{
     board::{
@@ -20,6 +18,19 @@ pub struct FlagInteraction;
 #[derive(Event)]
 pub struct BoardInteraction;
 
+#[derive(Resource, Debug)]
+pub struct TouchStatus {
+    pub timer: Timer,
+}
+
+impl Default for TouchStatus {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(0.15, TimerMode::Once),
+        }
+    }
+}
+
 pub fn open_interaction_event(
     trigger: Trigger<OpenInteraction>,
     sprites: Query<&Field>,
@@ -31,7 +42,6 @@ pub fn open_interaction_event(
     };
 
     commands.trigger(OpenField(field.0));
-    info("Clicked with left mouse");
 }
 
 pub fn flag_interaction_event(
@@ -61,40 +71,41 @@ pub fn flag_interaction_event(
     }
 }
 
-pub fn handle_click(ev: Trigger<Pointer<Click>>, mut commands: Commands) {
-    info!("Click!");
-
-    let id = ev.entity();
-    let button = ev.button;
-
-    if button == PointerButton::Primary {
-        commands.trigger_targets(OpenInteraction, id);
-    } else if button == PointerButton::Secondary {
-        commands.trigger_targets(FlagInteraction, id);
+pub fn handle_down(ev: Trigger<Pointer<Down>>, mut touch_status: ResMut<TouchStatus>) {
+    if ev.pointer_id.is_touch() {
+        info!("Touch Down");
+        touch_status.timer.reset();
+        touch_status.timer.unpause();
     }
-    commands.trigger(BoardInteraction);
 }
 
-pub fn handle_touch(
-    trigger: Trigger<TouchInput>,
+pub fn update_touch_timer(mut touch_status: ResMut<TouchStatus>, time: Res<Time>) {
+    touch_status.timer.tick(time.delta());
+}
+
+pub fn handle_up(
+    ev: Trigger<Pointer<Up>>,
     mut commands: Commands,
-    time: Res<Time>,
-    mut timer: Local<Timer>,
-    mut moved: Local<bool>,
+    touch_status: ResMut<TouchStatus>,
 ) {
-    match trigger.phase {
-        bevy::input::touch::TouchPhase::Started => {
-            timer.reset();
-            *moved = false;
+    let id = ev.entity();
+
+    if ev.pointer_id.is_touch() {
+        info!("Touch Status: {:?}", touch_status);
+        if touch_status.timer.finished() {
+            commands.trigger_targets(FlagInteraction, id);
+        } else {
+            commands.trigger_targets(OpenInteraction, id);
         }
-        bevy::input::touch::TouchPhase::Moved => *moved = true,
-        bevy::input::touch::TouchPhase::Ended => {
-            timer.tick(time.elapsed());
-            if timer.duration() >= Duration::from_secs(3) {
-                commands.trigger_targets(FlagInteraction, trigger.entity());
-                commands.trigger(BoardInteraction);
-            }
+    } else if ev.pointer_id.is_mouse() {
+        let button = ev.button;
+
+        if button == PointerButton::Primary {
+            commands.trigger_targets(OpenInteraction, id);
+        } else if button == PointerButton::Secondary {
+            commands.trigger_targets(FlagInteraction, id);
         }
-        bevy::input::touch::TouchPhase::Canceled => *moved = false,
-    };
+    }
+
+    commands.trigger(BoardInteraction);
 }
