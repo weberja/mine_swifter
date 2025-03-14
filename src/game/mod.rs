@@ -121,6 +121,7 @@ fn board_rest(
         });
 
     commands.insert_resource(board);
+    commands.trigger(ResetView);
 }
 
 fn board_setup(

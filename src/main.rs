@@ -42,5 +42,3 @@ fn main() {
         .insert_resource(RandomSource::<ChaCha8Rng>::default())
         .run();
 }
-
-fn fit_to_screen() {}

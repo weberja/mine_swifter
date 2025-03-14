@@ -1,4 +1,4 @@
-use bevy::{picking::pointer::PointerButton, prelude::*, utils::info};
+use bevy::{picking::pointer::PointerButton, prelude::*};
 
 use crate::{
     board::{
@@ -37,7 +37,7 @@ pub fn open_interaction_event(
     mut commands: Commands,
 ) {
     let Ok(field) = sprites.get(trigger.entity()) else {
-        info!("No Target");
+        debug!("No Target");
         return;
     };
 
@@ -51,7 +51,7 @@ pub fn flag_interaction_event(
     mut board: ResMut<Board>,
 ) {
     let Ok((material, field)) = sprites.get_mut(trigger.entity()) else {
-        info!("No Target");
+        debug!("No Target");
         return;
     };
 
@@ -71,11 +71,26 @@ pub fn flag_interaction_event(
     }
 }
 
-pub fn handle_down(ev: Trigger<Pointer<Down>>, mut touch_status: ResMut<TouchStatus>) {
+pub fn handle_down(
+    ev: Trigger<Pointer<Down>>,
+    mut commands: Commands,
+    mut touch_status: ResMut<TouchStatus>,
+) {
+    let id = ev.entity();
+
     if ev.pointer_id.is_touch() {
-        info!("Touch Down");
+        debug!("Touch Down");
         touch_status.timer.reset();
         touch_status.timer.unpause();
+    } else if ev.pointer_id.is_mouse() {
+        let button = ev.button;
+
+        if button == PointerButton::Primary {
+            commands.trigger_targets(OpenInteraction, id);
+        } else if button == PointerButton::Secondary {
+            commands.trigger_targets(FlagInteraction, id);
+        }
+        commands.trigger(BoardInteraction);
     }
 }
 
@@ -91,21 +106,12 @@ pub fn handle_up(
     let id = ev.entity();
 
     if ev.pointer_id.is_touch() {
-        info!("Touch Status: {:?}", touch_status);
+        debug!("Touch Status: {:?}", touch_status);
         if touch_status.timer.finished() {
             commands.trigger_targets(FlagInteraction, id);
         } else {
             commands.trigger_targets(OpenInteraction, id);
         }
-    } else if ev.pointer_id.is_mouse() {
-        let button = ev.button;
-
-        if button == PointerButton::Primary {
-            commands.trigger_targets(OpenInteraction, id);
-        } else if button == PointerButton::Secondary {
-            commands.trigger_targets(FlagInteraction, id);
-        }
+        commands.trigger(BoardInteraction);
     }
-
-    commands.trigger(BoardInteraction);
 }

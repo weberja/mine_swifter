@@ -54,7 +54,7 @@ pub fn on_resize_background(
     mut transform: Single<&mut Transform, With<Background>>,
 ) {
     for e in ev.read() {
-        info!("ResizedWindow");
+        debug!("ResizedWindow");
         transform.scale = Vec3 {
             x: e.width,
             y: e.height,

@@ -65,7 +65,7 @@ pub fn open_field(
                 field_data.status = FieldStatus::Open;
 
                 let count_neighbors = board.bombs(pos);
-                info!("{} with {}", pos, count_neighbors);
+                debug!("{} with {}", pos, count_neighbors);
 
                 match count_neighbors {
                     1 => material_data.index = 3,
@@ -79,7 +79,7 @@ pub fn open_field(
                     _ => material_data.index = 2,
                 }
 
-                info!(
+                debug!(
                     "Field {} fullfilled: {}, empty: {}",
                     pos,
                     board.fullfilled(pos),

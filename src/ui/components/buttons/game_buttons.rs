@@ -21,7 +21,7 @@ pub fn game_button_interaction(
             match menu_button {
                 GameButton::ResetGame => todo!(),
                 GameButton::RestartGame => {
-                    info!("New Game");
+                    debug!("New Game");
                     commands.trigger(RestartGame);
                 }
                 GameButton::UndoLastStep => todo!(),
