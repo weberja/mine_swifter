@@ -2,12 +2,12 @@
 
 use background::{on_resize_background, setup_background};
 use bevy::{prelude::*, sprite::AlphaMode2d};
-use click_on_board::{handle_down, handle_up, update_touch_timer, BoardInteraction, TouchStatus};
+use click_on_board::{BoardInteraction, TouchStatus, handle_down, handle_up, update_touch_timer};
 
 use crate::{
     assets::BoardAssets,
-    board::{board_data::Board, events::RestartGame, field::Field, BoardSettings},
-    camera::ZoomableObject,
+    board::{BoardSettings, board_data::Board, events::RestartGame, field::Field},
+    camera::{ZoomableObject, events::ResetView},
     materials::{field::FieldMaterial, grid::GridMaterial},
     states::{AppState, GameState},
 };
@@ -185,6 +185,7 @@ fn board_setup(
         });
 
     commands.insert_resource(board);
+    commands.trigger(ResetView);
 }
 
 fn board_destroy(mut commands: Commands, objects: Query<Entity, With<GameObject>>) {

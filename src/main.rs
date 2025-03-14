@@ -26,7 +26,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "MineSwifter".into(),
-                        //   fit_canvas_to_parent: true,
+                        fit_canvas_to_parent: true,
                         ..default()
                     }),
                     ..default()

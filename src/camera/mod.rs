@@ -44,23 +44,51 @@ fn zoom(trigger: Trigger<Zoom>, mut obj: Single<&mut Transform, With<ZoomableObj
 
 fn reset_view(
     _trigger: Trigger<ResetView>,
-    mut obj: Single<(&GlobalTransform, &mut Transform), With<ZoomableObject>>,
+    obj: Single<(&GlobalTransform, &mut Transform), With<ZoomableObject>>,
     settings: Res<BoardSettings>,
     assets: Res<BoardAssets>,
     images: Res<Assets<Image>>,
-    camera: Single<(&GlobalTransform, &Camera)>,
+    q_camera: Single<(&GlobalTransform, &Camera)>,
 ) {
     let Some(image) = images.get(&assets.field) else {
         error!("Could not get Asset");
         return;
     };
 
-    let (global_trans, trans) = obj.into_inner();
+    let (camera_tranform, camera) = *q_camera;
 
-    let size = (image.size() / 11) * settings.size;
+    let (global_trans, mut trans) = obj.into_inner();
 
-    let upper_left = camera
-        .1
-        .world_to_viewport(camera.0, global_trans.translation());
-    let lower_right = camera.1.world_to_viewport(camera.0, Vec3::new(0., 0., 0.));
+    let Some(viewport) = camera.logical_viewport_rect() else {
+        warn!("Camera has no viewport!");
+        return;
+    };
+
+    let a = match camera.viewport_to_world_2d(camera_tranform, viewport.min) {
+        Ok(t) => t,
+        Err(e) => {
+            warn!("{:?}", e);
+            return;
+        }
+    };
+    let b = match camera.viewport_to_world_2d(camera_tranform, viewport.max) {
+        Ok(t) => t,
+        Err(e) => {
+            warn!("{:?}", e);
+            return;
+        }
+    };
+
+    let view_world = Rect::from_corners(a, b);
+
+    let board = Rect::from_center_size(
+        global_trans.translation().xy(),
+        (image.size() * settings.size).as_vec2() * global_trans.scale().xy(),
+    );
+
+    let border_edge = board.max + viewport.max * 0.05;
+
+    let change = (view_world.max / border_edge).min_element();
+
+    trans.scale *= Vec2::splat(change).extend(1.);
 }
