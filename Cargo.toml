@@ -6,12 +6,12 @@ edition = "2024"
 [dependencies]
 bevy = { version = "0.15", features = ["bevy_dev_tools"] }
 bevy_asset_loader = { version = "0.22", features = ["2d"] }
+bevy_lunex = "0.3.2"
 
 rand = "0.9"
 rand_chacha = "0.9"
 
 web-sys = { version = "0.3", features = ["Screen"] }
-
 getrandom = { version = "0.3", features = ["wasm_js"] }
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]

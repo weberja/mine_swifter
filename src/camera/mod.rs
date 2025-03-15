@@ -3,7 +3,9 @@ pub mod events;
 use bevy::{
     input::{gestures::PinchGesture, mouse::MouseWheel},
     prelude::*,
+    render::view::RenderLayers,
 };
+use bevy_lunex::UiSourceCamera;
 use events::{ResetView, Zoom};
 
 use crate::{assets::BoardAssets, board::BoardSettings};
@@ -22,7 +24,13 @@ pub fn camera(app: &mut App) {
 }
 
 fn main_camera_setup(mut commands: Commands) {
-    commands.spawn((Camera2d, MainCamera));
+    commands.spawn((
+        Camera2d,
+        MainCamera,
+        UiSourceCamera::<0>,
+        Transform::from_translation(Vec3::Z * 1000.0),
+        RenderLayers::from_layers(&[0, 1]),
+    ));
 }
 
 fn zoom_touch(mut trigger: EventReader<PinchGesture>, mut commands: Commands) {
