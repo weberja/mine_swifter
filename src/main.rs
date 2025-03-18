@@ -54,6 +54,7 @@ fn fit_to_screen(
     mut bevy_window: Single<&mut Window>,
     mut commands: Commands,
     ass: Res<AssetServer>,
+    mut ui_scale: ResMut<UiScale>,
 ) {
     use bevy::window::WindowResolution;
     use web_sys::wasm_bindgen::UnwrapThrowExt;
@@ -73,6 +74,8 @@ fn fit_to_screen(
     let pixel_ratio = web_sys::window().unwrap().device_pixel_ratio();
 
     debug!("{} x {} with pixel_ratio {}", width, height, pixel_ratio);
+
+    ui_scale.0 = pixel_ratio as f32;
 
     bevy_window.resolution =
         WindowResolution::new((width * pixel_ratio) as f32, (height * pixel_ratio) as f32);
