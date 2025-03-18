@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 
-use crate::states::AppState;
+use crate::{board::BoardSettings, states::AppState};
 
 #[derive(Resource, AssetCollection)]
 pub struct BoardAssets {
@@ -33,9 +33,15 @@ pub struct FontAssets {
 pub fn startup_assets(app: &mut App) {
     app.add_loading_state(
         LoadingState::new(AppState::LoadingAssets)
-            .continue_to_state(AppState::MainMenu)
+            //.continue_to_state(AppState::MainMenu)
+            .continue_to_state(AppState::Game)
             .load_collection::<UiAssets>()
             .load_collection::<FontAssets>()
             .load_collection::<BoardAssets>(),
     );
+    app.insert_resource(BoardSettings {
+        size: (9, 9).into(),
+        solvable: false,
+        bomb_count: 15,
+    });
 }
