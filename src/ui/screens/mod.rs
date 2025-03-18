@@ -1,16 +1,10 @@
 use bevy::prelude::*;
-use bevy_lunex::{UiLunexDebugPlugin, UiLunexPlugins};
+use main_menu::MainMenu;
 
 pub mod lost;
 pub mod main_menu;
 pub mod win;
 
 pub fn screens(app: &mut App) {
-    app.add_plugins((
-        UiLunexPlugins,
-        UiLunexDebugPlugin::<1, 2>,
-        main_menu::main_menu,
-        lost::lost_screen,
-        win::win_screen,
-    ));
+    app.add_plugins((MainMenu, lost::lost_screen, win::win_screen));
 }

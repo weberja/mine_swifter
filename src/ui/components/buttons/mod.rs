@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+pub mod button;
 pub mod game_buttons;
 pub mod menu_buttons;
 
