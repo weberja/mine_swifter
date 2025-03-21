@@ -22,7 +22,7 @@ pub fn camera(app: &mut App) {
 }
 
 fn main_camera_setup(mut commands: Commands) {
-    commands.spawn((Camera2d, MainCamera));
+    commands.spawn((Camera2d, MainCamera, IsDefaultUiCamera));
 }
 
 fn zoom_touch(mut trigger: EventReader<PinchGesture>, mut commands: Commands) {

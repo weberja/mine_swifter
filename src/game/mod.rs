@@ -16,6 +16,8 @@ pub mod background;
 pub mod click_on_board;
 pub mod events;
 pub mod field_interaction;
+pub mod interactions;
+pub mod revert;
 
 #[derive(Component)]
 pub struct GameObject;

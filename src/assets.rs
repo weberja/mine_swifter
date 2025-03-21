@@ -14,10 +14,18 @@ pub struct BoardAssets {
 pub struct UiAssets {
     #[asset(path = "ui/cursor/PNG/Outline/Default/pointer_c.png")]
     pub cursor: Handle<Image>,
-    /*#[asset(path = "ui/cursor/PNG/Outline/Default/pointer_c.png")]
-    button: Handle<Image>,
-    #[asset(path = "ui/cursor/PNG/Outline/Default/pointer_c.png")]
-    button_pressed: Handle<Image>,*/
+    #[asset(path = "ui/PNG/Grey/Default/button_rectangle_depth_flat.png")]
+    pub button: Handle<Image>,
+    #[asset(path = "ui/PNG/Grey/Default/button_rectangle_depth_line.png")]
+    pub button_hover: Handle<Image>,
+    #[asset(path = "ui/PNG/Grey/Default/button_rectangle_depth_border.png")]
+    pub button_pressed: Handle<Image>,
+}
+
+#[derive(Resource, AssetCollection)]
+pub struct IconAssets {
+    #[asset(path = "ui/PNG/Extra/Double/icon_repeat_outline.png")]
+    pub reset: Handle<Image>,
 }
 
 #[derive(Resource, AssetCollection)]
@@ -33,11 +41,11 @@ pub struct FontAssets {
 pub fn startup_assets(app: &mut App) {
     app.add_loading_state(
         LoadingState::new(AppState::LoadingAssets)
-            //.continue_to_state(AppState::MainMenu)
-            .continue_to_state(AppState::Game)
+            .continue_to_state(AppState::MainMenu)
             .load_collection::<UiAssets>()
             .load_collection::<FontAssets>()
-            .load_collection::<BoardAssets>(),
+            .load_collection::<BoardAssets>()
+            .load_collection::<IconAssets>(),
     );
     app.insert_resource(BoardSettings {
         size: (9, 9).into(),
