@@ -13,11 +13,19 @@ pub enum AppState {
 pub enum GameState {
     #[default]
     Run,
-    Pause,
     Lost,
     Won,
 }
 
+#[derive(SubStates, Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[source(GameState = GameState::Run)]
+pub enum RunningState {
+    #[default]
+    Run,
+    Pause,
+}
 pub fn states(app: &mut App) {
-    app.init_state::<AppState>().add_sub_state::<GameState>();
+    app.init_state::<AppState>()
+        .add_sub_state::<GameState>()
+        .add_sub_state::<RunningState>();
 }

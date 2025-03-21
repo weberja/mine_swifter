@@ -16,10 +16,16 @@ pub struct UiAssets {
     pub cursor: Handle<Image>,
     #[asset(path = "ui/PNG/Grey/Default/button_rectangle_depth_flat.png")]
     pub button: Handle<Image>,
-    #[asset(path = "ui/PNG/Grey/Default/button_rectangle_depth_gradient.png")]
+    #[asset(path = "ui/PNG/Grey/Default/button_rectangle_depth_line.png")]
     pub button_hover: Handle<Image>,
-    #[asset(path = "ui/PNG/Grey/Default/button_rectangle_depth_gloss.png")]
+    #[asset(path = "ui/PNG/Grey/Default/button_rectangle_depth_border.png")]
     pub button_pressed: Handle<Image>,
+}
+
+#[derive(Resource, AssetCollection)]
+pub struct IconAssets {
+    #[asset(path = "ui/PNG/Extra/Double/icon_repeat_outline.png")]
+    pub reset: Handle<Image>,
 }
 
 #[derive(Resource, AssetCollection)]
@@ -38,7 +44,8 @@ pub fn startup_assets(app: &mut App) {
             .continue_to_state(AppState::MainMenu)
             .load_collection::<UiAssets>()
             .load_collection::<FontAssets>()
-            .load_collection::<BoardAssets>(),
+            .load_collection::<BoardAssets>()
+            .load_collection::<IconAssets>(),
     );
     app.insert_resource(BoardSettings {
         size: (9, 9).into(),
