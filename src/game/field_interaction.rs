@@ -11,13 +11,14 @@ use crate::{
 use bevy::{prelude::*, utils::HashSet};
 use rand_chacha::ChaCha8Rng;
 
-use super::revert::{AddMove, MoveDone, ReverteAction};
+use super::undo::{AddMove, MoveDone, ReverteAction};
 
 pub fn close_field(
     trigger: Trigger<ReverteAction>,
     mut board: ResMut<Board>,
     fields: Query<&MeshMaterial2d<FieldMaterial>, With<Field>>,
     mut materials: ResMut<Assets<FieldMaterial>>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
     for field_pos in trigger.action.moves.iter() {
         let Some(field_data) = board.fields.get_mut(field_pos) else {
@@ -34,6 +35,10 @@ pub fn close_field(
             warn!("Could not get material_data for fields");
             return;
         };
+
+        if field_data.bomb {
+            next_state.set(GameState::Run);
+        }
 
         field_data.status = FieldStatus::Closed;
         material_data.index = 0;

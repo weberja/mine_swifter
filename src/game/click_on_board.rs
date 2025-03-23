@@ -9,7 +9,7 @@ use crate::{
     materials::field::FieldMaterial,
 };
 
-use super::revert::AddMoveAndClose;
+use super::undo::AddMoveAndClose;
 
 #[derive(Event)]
 pub struct OpenInteraction;

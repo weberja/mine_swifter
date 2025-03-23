@@ -1,7 +1,7 @@
 use crate::{
     assets::{IconAssets, UiAssets},
     game::interactions::game::undo,
-    states::RunningState,
+    states::AppState,
     ui::components::buttons::SpriteButton,
 };
 use bevy::prelude::*;
@@ -11,8 +11,8 @@ pub struct GameUi;
 
 impl Plugin for GameUi {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(RunningState::Run), Self::spawn)
-            .add_systems(OnExit(RunningState::Run), Self::destroy);
+        app.add_systems(OnEnter(AppState::Game), Self::spawn)
+            .add_systems(OnExit(AppState::Game), Self::destroy);
     }
 }
 
@@ -37,10 +37,10 @@ impl GameUi {
             .with_children(|ui| {
                 ui.spawn((
                     Node {
-                        width: Val::VMax(10.),
-                        min_width: Val::Px(100.),
-                        min_height: Val::Px(100.),
-                        height: Val::VMax(10.),
+                        width: Val::VMax(2.),
+                        min_width: Val::Px(80.),
+                        min_height: Val::Px(80.),
+                        height: Val::VMax(2.),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..default()
@@ -48,7 +48,14 @@ impl GameUi {
                     SpriteButton,
                     SpriteButton::image(ui_asset.button.clone()),
                 ))
-                .with_child((ImageNode::new(icon_asset.reset.clone())))
+                .with_child((
+                    Node {
+                        width: Val::Percent(75.),
+                        height: Val::Percent(75.),
+                        ..default()
+                    },
+                    ImageNode::new(icon_asset.reset.clone()),
+                ))
                 .observe(undo);
             });
     }

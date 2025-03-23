@@ -3,7 +3,7 @@
 use background::{on_resize_background, setup_background};
 use bevy::{prelude::*, sprite::AlphaMode2d};
 use click_on_board::{BoardInteraction, TouchStatus, handle_down, handle_up, update_touch_timer};
-use revert::UndoPlugin;
+use undo::UndoPlugin;
 
 use crate::{
     assets::BoardAssets,
@@ -18,7 +18,7 @@ pub mod click_on_board;
 pub mod events;
 pub mod field_interaction;
 pub mod interactions;
-pub mod revert;
+pub mod undo;
 
 #[derive(Component)]
 pub struct GameObject;
