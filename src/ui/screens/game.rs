@@ -1,5 +1,6 @@
 use crate::{
     assets::{IconAssets, UiAssets},
+    game::interactions::game::undo,
     states::RunningState,
     ui::components::buttons::SpriteButton,
 };
@@ -48,9 +49,7 @@ impl GameUi {
                     SpriteButton::image(ui_asset.button.clone()),
                 ))
                 .with_child((ImageNode::new(icon_asset.reset.clone())))
-                .observe(|_: Trigger<Pointer<Click>>| {
-                    info!("Click - Reset");
-                });
+                .observe(undo);
             });
     }
 

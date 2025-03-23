@@ -11,6 +11,35 @@ use crate::{
 use bevy::{prelude::*, utils::HashSet};
 use rand_chacha::ChaCha8Rng;
 
+use super::revert::{AddMove, MoveDone, ReverteAction};
+
+pub fn close_field(
+    trigger: Trigger<ReverteAction>,
+    mut board: ResMut<Board>,
+    fields: Query<&MeshMaterial2d<FieldMaterial>, With<Field>>,
+    mut materials: ResMut<Assets<FieldMaterial>>,
+) {
+    for field_pos in trigger.action.moves.iter() {
+        let Some(field_data) = board.fields.get_mut(field_pos) else {
+            warn!("Can not get mutabale field data for pos");
+            return;
+        };
+
+        let Ok(material) = fields.get(field_data.entity) else {
+            warn!("Could not find material for entity");
+            return;
+        };
+
+        let Some(material_data) = materials.get_mut(material.id()) else {
+            warn!("Could not get material_data for fields");
+            return;
+        };
+
+        field_data.status = FieldStatus::Closed;
+        material_data.index = 0;
+    }
+}
+
 pub fn open_field(
     trigger: Trigger<OpenField>,
     mut board: ResMut<Board>,
@@ -18,6 +47,7 @@ pub fn open_field(
     mut materials: ResMut<Assets<FieldMaterial>>,
     rng: ResMut<RandomSource<ChaCha8Rng>>,
     mut next_state: ResMut<NextState<GameState>>,
+    mut commands: Commands,
 ) {
     let mut visited = HashSet::new();
     let mut to_visit = HashSet::from([trigger.0]);
@@ -58,8 +88,9 @@ pub fn open_field(
 
             if field_data.bomb {
                 to_visit.clear();
-                material_data.index = 1;
+                material_data.index = 12;
                 next_state.set(GameState::Lost);
+                commands.trigger(AddMove(pos));
                 break;
             } else {
                 field_data.status = FieldStatus::Open;
@@ -67,16 +98,21 @@ pub fn open_field(
                 let count_neighbors = board.bombs(pos);
                 debug!("{} with {}", pos, count_neighbors);
 
-                match count_neighbors {
-                    1 => material_data.index = 3,
-                    2 => material_data.index = 4,
-                    3 => material_data.index = 5,
-                    4 => material_data.index = 6,
-                    5 => material_data.index = 7,
-                    6 => material_data.index = 8,
-                    7 => material_data.index = 9,
-                    8 => material_data.index = 10,
-                    _ => material_data.index = 2,
+                let new_index = match count_neighbors {
+                    1 => 3,
+                    2 => 4,
+                    3 => 5,
+                    4 => 6,
+                    5 => 7,
+                    6 => 8,
+                    7 => 9,
+                    8 => 10,
+                    _ => 2,
+                };
+
+                if material_data.index != new_index {
+                    material_data.index = new_index;
+                    commands.trigger(AddMove(pos));
                 }
 
                 debug!(
@@ -100,4 +136,5 @@ pub fn open_field(
             depth += 1;
         }
     }
+    commands.trigger(MoveDone);
 }

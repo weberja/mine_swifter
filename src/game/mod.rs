@@ -3,6 +3,7 @@
 use background::{on_resize_background, setup_background};
 use bevy::{prelude::*, sprite::AlphaMode2d};
 use click_on_board::{BoardInteraction, TouchStatus, handle_down, handle_up, update_touch_timer};
+use revert::UndoPlugin;
 
 use crate::{
     assets::BoardAssets,
@@ -24,6 +25,7 @@ pub struct GameObject;
 
 pub fn game(app: &mut App) {
     app.add_observer(field_interaction::open_field)
+        .add_observer(field_interaction::close_field)
         .add_observer(click_on_board::flag_interaction_event)
         .add_observer(click_on_board::open_interaction_event)
         .add_observer(board_rest)
@@ -38,7 +40,8 @@ pub fn game(app: &mut App) {
                 on_resize_background.run_if(not(in_state(AppState::LoadingAssets))),
                 update_touch_timer,
             ),
-        );
+        )
+        .add_plugins(UndoPlugin);
 }
 
 fn won(

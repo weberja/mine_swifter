@@ -9,6 +9,8 @@ use crate::{
     materials::field::FieldMaterial,
 };
 
+use super::revert::AddMoveAndClose;
+
 #[derive(Event)]
 pub struct OpenInteraction;
 
@@ -49,6 +51,7 @@ pub fn flag_interaction_event(
     mut sprites: Query<(&mut MeshMaterial2d<FieldMaterial>, &Field)>,
     mut materials: ResMut<Assets<FieldMaterial>>,
     mut board: ResMut<Board>,
+    mut commands: Commands,
 ) {
     let Ok((material, field)) = sprites.get_mut(trigger.entity()) else {
         debug!("No Target");
@@ -67,6 +70,7 @@ pub fn flag_interaction_event(
         } else {
             field_data.status = FieldStatus::Flaged;
             material_data.index = 1;
+            commands.trigger(AddMoveAndClose(field.0));
         }
     }
 }
